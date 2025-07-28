@@ -18,4 +18,4 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build-env /app/publish .
 RUN ls -la /app  # Para checar se a DLL está aqui
-ENTRYPOINT ["dotnet", "BunnyUploader.dll"]
+ENTRYPOINT ["dotnet", "/app/BunnyUploader.dll"]
