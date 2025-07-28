@@ -6,6 +6,8 @@ WORKDIR /src/BunnyUploader
 RUN dotnet restore
 
 WORKDIR /src
+
+FROM build AS publish
 COPY . .
 RUN dotnet publish BunnyUploader/BunnyUploader.csproj -c Release -o /app/publish --no-restore
 
