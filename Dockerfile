@@ -1,11 +1,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY *.csproj .
-RUN dotnet restore
+COPY BunnyUploader/BunnyUploader.sln ./BunnyUploader/
+COPY BunnyUploader/BunnyUploader.csproj ./BunnyUploader/
 
-COPY . .
-RUN dotnet publish "BunnyUploader.csproj" -c Release -o /app/publish --no-restore /p:EnableSdkContainerSupport=false
+RUN dotnet restore "./BunnyUploader/BunnyUploader.sln"
+
+COPY ./BunnyUploader ./BunnyUploader
+
+RUN dotnet publish "./BunnyUploader/BunnyUploader.csproj" -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/runtime:8.0
 WORKDIR /app
