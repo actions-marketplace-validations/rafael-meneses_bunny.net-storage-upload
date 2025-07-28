@@ -1,0 +1,34 @@
+name: 'Upload to Bunny.net Storage Zone'
+description: "Upload files to Bunny.net's storage zone"
+author: 'Rafael Meneses'
+
+branding:
+  icon: 'upload-cloud'
+  color: 'orange'
+
+inputs:
+  main-zone:
+    description: 'The primary zone of your BunnyCDN account (e.g. "br", "de", "us")'
+    required: false
+    default: 'de'
+  storage_zone:
+    description: 'Storage Zone Name'
+    required: true
+  api_key:
+    description: 'Storage Zone API Key'
+    required: true
+  local_path:
+    description: 'The local path of the directory or file to be uploaded'
+    required: true
+  remote_path:
+    description: 'The path of the remote subdirectory in the Storage Zone where the files will be uploaded'
+    required: false
+    default: ''
+  remove-old-files:
+    description: 'If "true", remove all files from `remote-path` before uploading new ones.'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

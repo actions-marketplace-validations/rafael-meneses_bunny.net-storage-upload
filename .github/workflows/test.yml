@@ -1,0 +1,33 @@
+name: Deploy to BunnyCDN
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies and build
+        working-directory: ./deploy-test
+        run: |
+          npm install
+          npm run build 
+
+      - name: Sync files to BunnyCDN
+        id: bunny-sync 
+        uses: ./ 
+        with:
+          main-zone: "br"
+          storage-zone: ${{ secrets.BUNNY_STORAGE_ZONE }}
+          api-key: ${{ secrets.BUNNY_API_KEY }}
+          local-path: './deploy-test/dist/'
+          remove-old-files: true
