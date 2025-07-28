@@ -9,7 +9,7 @@ COPY ./BunnyUploader ./BunnyUploader
 
 WORKDIR /src/BunnyUploader
 
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet publish BunnyUploader.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/runtime:8.0
 WORKDIR /app
