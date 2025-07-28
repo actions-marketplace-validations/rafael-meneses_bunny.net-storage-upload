@@ -29,6 +29,18 @@ inputs:
     required: false
     default: 'false'
 
+outputs:
+  files-uploaded:
+    description: 'Files uploaded successfully.'
+  files-deleted:
+    description: 'Files deleted successfully.'
+  files-failed-upload:
+    description: 'Files that failed to upload.'
+  files-failed-delete:
+    description: 'Files that failed to delete.'
+  uploaded-files-json:
+    description: 'A JSON string with the list of uploaded files.'
+
 runs:
   using: 'docker'
   image: 'Dockerfile'

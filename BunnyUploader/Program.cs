@@ -1,5 +1,6 @@
 using BunnyCDN.Net.Storage;
 using System.Collections.Concurrent;
+using System.Text.Json;
 
 const int MaxAttempts = 3;
 
@@ -49,15 +50,15 @@ var options = new ParallelOptions()
     MaxDegreeOfParallelism = 50 //https://docs.bunny.net/reference/edge-storage-api-limits
 };
 
+ConcurrentBag<string> deletedFiles = [];
+ConcurrentBag<string> deletedFilesFail = [];
+
 if (removeOldFiles)
 {
     var bunnyFiles = await bunnyCDNStorage.GetStorageObjectsAsync(storageZone + "/");
 
     Console.WriteLine($"{storageZone}: {bunnyFiles.Count} files");
     Console.WriteLine($"Removing old files from Bunny {storageZone}...");
-
-    ConcurrentBag<string> deletedFilesList = [];
-    ConcurrentBag<string> deletedFilesFail = [];
 
     await Parallel.ForEachAsync(bunnyFiles, options, async (file, ct) =>
     {
@@ -67,7 +68,7 @@ if (removeOldFiles)
             try
             {
                 await bunnyCDNStorage.DeleteObjectAsync(file.Path);
-                deletedFilesList.Add(file.Path);
+                deletedFiles.Add(file.Path);
                 return;
             }
             catch (Exception ex)
@@ -84,7 +85,7 @@ if (removeOldFiles)
         }
     });
 
-    Console.WriteLine($"Deleted {deletedFilesList.Count} files from Bunny {storageZone}");
+    Console.WriteLine($"Deleted {deletedFiles.Count} files from Bunny {storageZone}");
     if (deletedFilesFail.Count > 0)
     {
         Console.WriteLine($"Failed to delete {deletedFilesFail.Count} files from Bunny {storageZone}:");
@@ -140,10 +141,14 @@ if (uploadedFilesFail.Count > 0)
     return 1;
 }
 
-return 0;
-
-string? GetArg(string name)
+var githubOutputFile = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
+if (!string.IsNullOrEmpty(githubOutputFile))
 {
-    var idx = Array.IndexOf(args, name);
-    return (idx >= 0 && idx + 1 < args.Length) ? args[idx + 1] : null;
+    await File.AppendAllTextAsync(githubOutputFile, $"files-uploaded={uploadedFiles.Count}{Environment.NewLine}");
+    await File.AppendAllTextAsync(githubOutputFile, $"files-deleted={deletedFiles.Count}{Environment.NewLine}");
+    await File.AppendAllTextAsync(githubOutputFile, $"files-failed-upload={uploadedFilesFail.Count}{Environment.NewLine}");
+    await File.AppendAllTextAsync(githubOutputFile, $"files-failed-delete={deletedFilesFail.Count}{Environment.NewLine}");
+    await File.AppendAllTextAsync(githubOutputFile, $"uploaded-files-json={JsonSerializer.Serialize(uploadedFiles)}{Environment.NewLine}");
 }
+
+return (uploadedFilesFail.IsEmpty && deletedFilesFail.IsEmpty) ? 0 : 1;
