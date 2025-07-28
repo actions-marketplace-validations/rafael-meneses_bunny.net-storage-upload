@@ -71,7 +71,7 @@ if (removeOldFiles)
                 deletedFiles.Add(file.Path);
                 return;
             }
-            catch (Exception ex)
+            catch
             {
                 attempt++;
 
@@ -116,7 +116,7 @@ await Parallel.ForEachAsync(files, options, async (file, ct) =>
             uploadedFiles.Add(file);
             return;
         }
-        catch (Exception ex)
+        catch 
         {
             attempt++;
 
