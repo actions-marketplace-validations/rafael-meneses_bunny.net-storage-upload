@@ -5,7 +5,7 @@ COPY *.csproj .
 RUN dotnet restore
 
 COPY . .
-RUN dotnet publish "BunnyUploader.csproj" -c Release -o /app/publish --no-restore
+RUN dotnet publish "BunnyUploader.csproj" -c Release -o /app/publish --no-restore /p:EnableSdkContainerSupport=false
 
 FROM mcr.microsoft.com/dotnet/runtime:8.0
 WORKDIR /app
