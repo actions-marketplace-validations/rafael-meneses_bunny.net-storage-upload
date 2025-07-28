@@ -12,8 +12,10 @@ COPY . .
 # Publica a aplicação. Esta camada só será invalidada se os arquivos de código-fonte mudarem.
 RUN dotnet publish ./BunnyUploader/BunnyUploader.csproj -c Release -o /app/publish --no-restore
 
+RUN ls -la /app/publish
+
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build-env /app/publish .
-
+RUN ls -la /app  # Para checar se a DLL está aqui
 ENTRYPOINT ["dotnet", "BunnyUploader.dll"]
