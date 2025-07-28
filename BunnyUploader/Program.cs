@@ -4,12 +4,12 @@ using System.Text.Json;
 
 const int MaxAttempts = 3;
 
-var mainZone = Environment.GetEnvironmentVariable("INPUT_MAIN-ZONE") ?? "de";
-var storageZone = Environment.GetEnvironmentVariable("INPUT_STORAGE-ZONE");
-var apiKey = Environment.GetEnvironmentVariable("INPUT_API-KEY");
-var localPath = Environment.GetEnvironmentVariable("INPUT_LOCAL-PATH");
-var remotePath = Environment.GetEnvironmentVariable("INPUT_REMOTE-PATH") ?? "";
-bool removeOldFiles = Convert.ToBoolean(Environment.GetEnvironmentVariable("INPUT_REMOVE-OLD-FILES"));
+var mainZone = Environment.GetEnvironmentVariable("INPUT_MAIN_ZONE") ?? "de";
+var storageZone = Environment.GetEnvironmentVariable("INPUT_STORAGE_ZONE");
+var apiKey = Environment.GetEnvironmentVariable("INPUT_API_KEY");
+var localPath = Environment.GetEnvironmentVariable("INPUT_LOCAL_PATH");
+var remotePath = Environment.GetEnvironmentVariable("INPUT_REMOTE_PATH") ?? "";
+bool removeOldFiles = Convert.ToBoolean(Environment.GetEnvironmentVariable("INPUT_REMOVE_OLD_FILES"));
 
 Console.WriteLine($"Main Zone: {mainZone}");
 Console.WriteLine($"Storage Zone: {storageZone}");
@@ -144,11 +144,11 @@ if (uploadedFilesFail.Count > 0)
 var githubOutputFile = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
 if (!string.IsNullOrEmpty(githubOutputFile))
 {
-    await File.AppendAllTextAsync(githubOutputFile, $"files-uploaded={uploadedFiles.Count}{Environment.NewLine}");
-    await File.AppendAllTextAsync(githubOutputFile, $"files-deleted={deletedFiles.Count}{Environment.NewLine}");
-    await File.AppendAllTextAsync(githubOutputFile, $"files-failed-upload={uploadedFilesFail.Count}{Environment.NewLine}");
-    await File.AppendAllTextAsync(githubOutputFile, $"files-failed-delete={deletedFilesFail.Count}{Environment.NewLine}");
-    await File.AppendAllTextAsync(githubOutputFile, $"uploaded-files-json={JsonSerializer.Serialize(uploadedFiles)}{Environment.NewLine}");
+    await File.AppendAllTextAsync(githubOutputFile, $"files_uploaded={uploadedFiles.Count}{Environment.NewLine}");
+    await File.AppendAllTextAsync(githubOutputFile, $"files_deleted={deletedFiles.Count}{Environment.NewLine}");
+    await File.AppendAllTextAsync(githubOutputFile, $"files_failed_upload={uploadedFilesFail.Count}{Environment.NewLine}");
+    await File.AppendAllTextAsync(githubOutputFile, $"files_failed_delete={deletedFilesFail.Count}{Environment.NewLine}");
+    await File.AppendAllTextAsync(githubOutputFile, $"uploaded_files_json={JsonSerializer.Serialize(uploadedFiles)}{Environment.NewLine}");
 }
 
 return (uploadedFilesFail.IsEmpty && deletedFilesFail.IsEmpty) ? 0 : 1;

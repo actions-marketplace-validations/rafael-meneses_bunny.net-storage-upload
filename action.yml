@@ -7,7 +7,7 @@ branding:
   color: 'orange'
 
 inputs:
-  main-zone:
+  main_zone:
     description: 'The primary zone of your BunnyCDN account (e.g. "br", "de", "us")'
     required: false
     default: 'de'
@@ -24,21 +24,21 @@ inputs:
     description: 'The path of the remote subdirectory in the Storage Zone where the files will be uploaded'
     required: false
     default: ''
-  remove-old-files:
+  remove_old_files:
     description: 'If "true", remove all files from `remote-path` before uploading new ones.'
     required: false
     default: 'false'
 
 outputs:
-  files-uploaded:
+  files_uploaded:
     description: 'Files uploaded successfully.'
-  files-deleted:
+  files_deleted:
     description: 'Files deleted successfully.'
-  files-failed-upload:
+  files_failed_upload:
     description: 'Files that failed to upload.'
-  files-failed-delete:
+  files_failed_delete:
     description: 'Files that failed to delete.'
-  uploaded-files-json:
+  uploaded_files_json:
     description: 'A JSON string with the list of uploaded files.'
 
 runs:
