@@ -16,26 +16,26 @@ bool purgeAfterUpload = Convert.ToBoolean(Environment.GetEnvironmentVariable("IN
 
 if (string.IsNullOrEmpty(storageZone))
 {
-    Console.Error.WriteLine("Error: The 'storage-zone' entry is required.");
+    Console.Error.WriteLine("Error: The 'storage-zone' field is required.");
     return 1;
 }
 
 if (string.IsNullOrEmpty(apiKey))
 {
-    Console.Error.WriteLine("Error: The 'api-key' entry is required.");
+    Console.Error.WriteLine("Error: The 'api-key' field is required.");
     return 1;
 }
 
 if (string.IsNullOrEmpty(localPath))
 {
-    Console.Error.WriteLine("Error: The 'local-path' entry is required.");
+    Console.Error.WriteLine("Error: The 'local-path' field is required.");
     return 1;
 }
 
 var fullPath = Path.GetFullPath(Path.Combine(Environment.GetEnvironmentVariable("GITHUB_WORKSPACE") ?? "./", localPath));
 if (!Directory.Exists(fullPath) && !File.Exists(fullPath))
 {
-    Console.Error.WriteLine($"Error: O caminho local '{fullPath}' não foi encontrado.");
+    Console.Error.WriteLine($"Error: The local path '{fullPath}' was not found.");
     return 1;
 }
 
@@ -168,7 +168,7 @@ async Task<BunnyStorageZone> GetBunnyPullZone(string storageZone, string apiKey)
         var storageZones = JsonSerializer.Deserialize<List<BunnyStorageZone>>(responseContent);
 
         if (storageZones == null || !storageZones.Any()) throw new Exception("Storage zone not found");
-            
+
         var selectedZone = storageZones.FirstOrDefault(z => z.Name.ToLower().Equals(storageZone.ToLower()) || z.Id.ToString().Equals(storageZones));
         if (selectedZone == null) throw new Exception($"Storage zone '{storageZone}' not found.");
 
