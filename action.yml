@@ -1,5 +1,5 @@
 name: 'Upload to Bunny.net Storage Zone'
-description: "Upload files to a Bunny.net storage zone"
+description: "Uploads files to the Edge Storage Zone on Bunny.net and allows purging of Pull Zones linked to the account."
 author: 'Rafael Meneses'
 
 branding:
