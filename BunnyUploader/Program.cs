@@ -1,22 +1,18 @@
 using BunnyCDN.Net.Storage;
+using BunnyUploader;
 using System.Collections.Concurrent;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 const int MaxAttempts = 3;
 
-var mainZone = Environment.GetEnvironmentVariable("INPUT_MAIN_ZONE") ?? "de";
 var storageZone = Environment.GetEnvironmentVariable("INPUT_STORAGE_ZONE");
 var apiKey = Environment.GetEnvironmentVariable("INPUT_API_KEY");
 var localPath = Environment.GetEnvironmentVariable("INPUT_LOCAL_PATH");
 var remotePath = Environment.GetEnvironmentVariable("INPUT_REMOTE_PATH") ?? "";
 bool removeOldFiles = Convert.ToBoolean(Environment.GetEnvironmentVariable("INPUT_REMOVE_OLD_FILES"));
+bool purgeAfterUpload = Convert.ToBoolean(Environment.GetEnvironmentVariable("INPUT_PURGE_AFTER_UPLOAD"));
 
-Console.WriteLine($"Main Zone: {mainZone}");
-Console.WriteLine($"Storage Zone: {storageZone}");
-Console.WriteLine($"API Key: {apiKey}");
-Console.WriteLine($"Local Path: {localPath}");
-Console.WriteLine($"Remote Path: {remotePath}");
-Console.WriteLine($"Remove Old Files: {removeOldFiles}");
 
 if (string.IsNullOrEmpty(storageZone))
 {
@@ -43,7 +39,9 @@ if (!Directory.Exists(fullPath) && !File.Exists(fullPath))
     return 1;
 }
 
-var bunnyCDNStorage = new BunnyCDNStorage(storageZone, apiKey, mainZone);
+var bunnyStorageZone = await GetBunnyPullZone(storageZone, apiKey);
+
+var bunnyCDNStorage = new BunnyCDNStorage(bunnyStorageZone.Name, bunnyStorageZone.Password, bunnyStorageZone.Region);
 
 var options = new ParallelOptions()
 {
@@ -55,10 +53,10 @@ ConcurrentBag<string> deletedFilesFail = [];
 
 if (removeOldFiles)
 {
-    var bunnyFiles = await bunnyCDNStorage.GetStorageObjectsAsync(storageZone + "/");
+    var bunnyFiles = await bunnyCDNStorage.GetStorageObjectsAsync(bunnyStorageZone.Name + "/");
 
-    Console.WriteLine($"{storageZone}: {bunnyFiles.Count} files");
-    Console.WriteLine($"Removing old files from Bunny {storageZone}...");
+    Console.WriteLine($"{bunnyStorageZone.Name}: {bunnyFiles.Count} files");
+    Console.WriteLine($"Removing old files from Bunny {bunnyStorageZone.Name}...");
 
     await Parallel.ForEachAsync(bunnyFiles, options, async (file, ct) =>
     {
@@ -85,10 +83,10 @@ if (removeOldFiles)
         }
     });
 
-    Console.WriteLine($"Deleted {deletedFiles.Count} files from Bunny {storageZone}");
+    Console.WriteLine($"Deleted {deletedFiles.Count} files from Bunny {bunnyStorageZone.Name}");
     if (deletedFilesFail.Count > 0)
     {
-        Console.WriteLine($"Failed to delete {deletedFilesFail.Count} files from Bunny {storageZone}:");
+        Console.WriteLine($"Failed to delete {deletedFilesFail.Count} files from Bunny {bunnyStorageZone.Name}:");
         foreach (var file in deletedFilesFail)
         {
             Console.Error.WriteLine($"- {file}");
@@ -98,7 +96,7 @@ if (removeOldFiles)
 }
 
 var files = Directory.EnumerateFiles(fullPath, "*.*", SearchOption.AllDirectories).ToList();
-Console.WriteLine($"Found {files.Count} files to upload to Bunny {storageZone}");
+Console.WriteLine($"Found {files.Count} files to upload to Bunny {bunnyStorageZone.Name}");
 
 ConcurrentBag<string> uploadedFiles = [];
 ConcurrentBag<string> uploadedFilesFail = [];
@@ -112,11 +110,11 @@ await Parallel.ForEachAsync(files, options, async (file, ct) =>
     {
         try
         {
-            await bunnyCDNStorage.UploadAsync(file, $@"{storageZone}/{relativePath}");
+            await bunnyCDNStorage.UploadAsync(file, $@"{bunnyStorageZone.Name}/{relativePath}");
             uploadedFiles.Add(file);
             return;
         }
-        catch 
+        catch
         {
             attempt++;
 
@@ -130,7 +128,7 @@ await Parallel.ForEachAsync(files, options, async (file, ct) =>
     }
 });
 
-Console.WriteLine($"Uploaded {uploadedFiles.Count} files to Bunny {storageZone}");
+Console.WriteLine($"Uploaded {uploadedFiles.Count} files to Bunny {bunnyStorageZone.Name}");
 if (uploadedFilesFail.Count > 0)
 {
     Console.WriteLine($"Failed to upload {uploadedFilesFail.Count} files to Bunny {storageZone}:");
@@ -140,6 +138,8 @@ if (uploadedFilesFail.Count > 0)
     }
     return 1;
 }
+
+if (purgeAfterUpload) await PurgePullZone(bunnyStorageZone.PullZones, apiKey);
 
 var githubOutputFile = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
 if (!string.IsNullOrEmpty(githubOutputFile))
@@ -152,3 +152,43 @@ if (!string.IsNullOrEmpty(githubOutputFile))
 }
 
 return (uploadedFilesFail.IsEmpty && deletedFilesFail.IsEmpty) ? 0 : 1;
+
+
+async Task<BunnyStorageZone> GetBunnyPullZone(string storageZone, string apiKey)
+{
+    using (HttpClient client = new())
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "https://api.bunny.net/storagezone?page=0&perPage=1000&includeDeleted=false");
+        request.Headers.Add("AccessKey", apiKey);
+        request.Headers.Add("accept", "application/json");
+        var response = await client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        var storageZones = JsonSerializer.Deserialize<List<BunnyStorageZone>>(responseContent);
+
+        if (storageZones == null || !storageZones.Any()) throw new Exception("Storage zone not found");
+            
+        var selectedZone = storageZones.FirstOrDefault(z => z.Name.ToLower().Equals(storageZone.ToLower()) || z.Id.ToString().Equals(storageZones));
+        if (selectedZone == null) throw new Exception($"Storage zone '{storageZone}' not found.");
+
+        return selectedZone;
+    }
+}
+
+async Task PurgePullZone(List<BunnyPullZone> pullZones, string apiKey)
+{
+    using (HttpClient client = new())
+    {
+        foreach (var pullZone in pullZones)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, $"https://api.bunny.net/pullzone/{pullZone.Id}/purgeCache");
+            request.Headers.Add("AccessKey", apiKey);
+            request.Headers.Add("accept", "application/json");
+            var content = new StringContent(string.Empty);
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            request.Content = content;
+            await client.SendAsync(request);
+        }
+    }
+}
