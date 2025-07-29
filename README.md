@@ -1,28 +1,24 @@
 # bunny.net-storage-upload
 
-Este repositório contém um utilitário para upload e gerenciamento de arquivos em um Storage Zone do Bunny.net, com suporte a remoção de arquivos antigos, integração com GitHub Actions e execução via Docker.
+This repository contains a utility for uploading and managing files in a Bunny.net Edge Storage Zone, with support for removing old files, purging the cache of related Pull Zones, and integration with GitHub Actions.
 
-## Visão Geral
+## Overview
+The main project is implemented in .NET 8 and aims to simplify the automated upload of files to Bunny.net Storage. It is ideal for CI/CD pipelines, static website publishing, or large-scale content distribution. It can be used both locally and within GitHub Actions workflows.
 
-O projeto principal está implementado em .NET 8, e seu objetivo é facilitar o envio automatizado de arquivos para o Bunny.net Storage, sendo ideal para pipelines de CI/CD, publicação de sites estáticos ou distribuição de conteúdos em larga escala. Ele pode ser utilizado tanto localmente quanto em automações via GitHub Actions.
+## Features
+-Upload of local files/directories to a Bunny.net Edge Storage Zone;
+-Optional automatic removal of remote files that no longer exist locally;
+-High level of parallelism in operations;
+-Optional Purge Cache of Pull Zones linked to the Storage;
+-Returns metrics such as total files uploaded, deleted, failed, etc., with direct integration into GitHub Actions;
+-Ready-to-use Docker image.
 
-## Funcionalidades
-
-- Upload de arquivos/diretórios locais para um Storage Zone do Bunny.net.
-- Remoção automática de arquivos remotos que não existem mais localmente, se habilitado.
-- Alto grau de paralelismo nas operações (até 50 uploads/deletes simultâneos).
-- Retorno de métricas como total de arquivos enviados, deletados, falhas, etc., com integração direta ao GitHub Actions.
-- Imagem Docker pronta para uso.
-
-## Como Usar
+## how to Use
 
 ```yaml
 name: Deploy to BunnyCDN
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -45,21 +41,17 @@ jobs:
         id: bunny-sync 
         uses: ./ 
         with:
-          main_zone: "br"
           storage_zone: ${{ secrets.BUNNY_STORAGE_ZONE }}
           api_key: ${{ secrets.BUNNY_API_KEY }}
+          purge_after_upload: true
           local_path: './deploy-test/dist/'
           remove_old_files: true
 ```
 
 ### GitHub Actions
+This utility is designed for seamless integration with GitHub Actions pipelines, enabling automated deployment of assets, static websites, or other content to Bunny.net Storage.
 
-Este utilitário foi desenhado para fácil integração com pipelines do GitHub Actions, permitindo deploy automatizado de assets, sites estáticos ou outros conteúdos para o Bunny.net Storage.
-
-## Licença
-
-Distribuído sob a licença [GNU GPL v3](LICENSE).
-
+## License
+Distributed under the [GNU GPL v3](LICENSE).
 ---
-
-Desenvolvido por [rafael-meneses](https://github.com/rafael-meneses).
+Developed by [rafael-meneses](https://github.com/rafael-meneses).
