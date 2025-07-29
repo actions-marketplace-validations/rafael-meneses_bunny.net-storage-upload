@@ -1,5 +1,5 @@
 name: 'Upload to Bunny.net Storage Zone'
-description: "Upload files to Bunny.net's storage zone"
+description: "Upload files to a Bunny.net storage zone"
 author: 'Rafael Meneses'
 
 branding:
@@ -7,15 +7,11 @@ branding:
   color: 'orange'
 
 inputs:
-  main_zone:
-    description: 'The primary zone of your BunnyCDN account (e.g. "br", "de", "us")'
-    required: false
-    default: 'de'
   storage_zone:
-    description: 'Storage Zone Name'
+    description: 'Storage zone name or ID'
     required: true
   api_key:
-    description: 'Storage Zone API Key'
+    description: 'Bunny account API key'
     required: true
   local_path:
     description: 'The local path of the directory or file to be uploaded'
@@ -25,7 +21,11 @@ inputs:
     required: false
     default: ''
   remove_old_files:
-    description: 'If "true", remove all files from `remote-path` before uploading new ones.'
+    description: 'If "true", remove all files from remote-path before uploading new ones.'
+    required: false
+    default: 'false'
+  purge_after_upload:
+    description: 'If "true", purge the CDN cache after uploading files.'
     required: false
     default: 'false'
 
