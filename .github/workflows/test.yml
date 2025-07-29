@@ -26,8 +26,8 @@ jobs:
         id: bunny-sync 
         uses: ./ 
         with:
-          main_zone: "br"
           storage_zone: ${{ secrets.BUNNY_STORAGE_ZONE }}
           api_key: ${{ secrets.BUNNY_API_KEY }}
+          purge_after_upload: true
           local_path: './deploy-test/dist/'
           remove_old_files: true
