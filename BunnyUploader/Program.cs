@@ -139,7 +139,7 @@ if (uploadedFilesFail.Count > 0)
     return 1;
 }
 
-if (purgeAfterUpload) await PurgePullZone(bunnyStorageZone.PullZones, apiKey);
+if (purgeAfterUpload && bunnyStorageZone.PullZones.Any()) await PurgePullZone(bunnyStorageZone.PullZones, apiKey);
 
 var githubOutputFile = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
 if (!string.IsNullOrEmpty(githubOutputFile))

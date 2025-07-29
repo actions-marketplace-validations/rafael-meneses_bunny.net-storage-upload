@@ -7,6 +7,6 @@
         public string Password { get; set; }
         public string Region { get; set; }
 
-        public List<BunnyPullZone> PullZones { get; set; }
+        public List<BunnyPullZone> PullZones { get; set; } = [];
     }
 }
